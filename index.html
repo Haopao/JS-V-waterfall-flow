@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>瀑布流加载</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+
+        #container {
+            position: relative;
+        }
+
+        .box {
+            padding: 5px;
+            float: left;
+        }
+
+        .box-img {
+            padding: 5px;
+            border: 1px solid #eee;
+            box-shadow: 0 0 5px #eee;
+            border-radius: 5px;
+        }
+
+        .box-img img{
+            width: 230px;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+    </div>
+    <script >
+
+        const oPatent = document.getElementById('container');
+
+        window.addEventListener("load",() => {
+            const imgArr = [];
+            for (var i=1;i<=50;i++) {
+                const oDiv = document.createElement('div');
+                oDiv.className = 'box';
+                oPatent.appendChild(oDiv);
+                const boxImg = document.createElement('div');
+                boxImg.className = 'box-img';
+                oDiv.appendChild(boxImg);
+                const img = new Image;
+                img.src = 'img/'+ i + '.jpg';
+                boxImg.appendChild(img);
+                img.onload = function(){
+                    imgLocation('box');
+                };
+                const imgSrc = 'img/'+ i +'.jpg';
+                imgArr.push(imgSrc);
+
+            };
+            imgLocation('box');
+            checkLoading('box');
+//            const imgData = [{'src':'21.jpg'},{'src':'22.jpg'},{'src':'23.jpg'},{'src':'24.jpg'},{'src':'25.jpg'},];
+            this.addEventListener('scroll',() => {
+                if (checkLoading('box')){
+                    imgArr.map((current,index) => {
+                        const oDiv = document.createElement('div');
+                        oDiv.className = 'box';
+                        oPatent.appendChild(oDiv);
+                        const boxImg = document.createElement('div');
+                        boxImg.className = 'box-img';
+                        oDiv.appendChild(boxImg);
+                        const img = new Image;
+                        img.src = imgArr[index];
+                        boxImg.appendChild(img);
+                    });
+                    imgLocation('box');
+                }
+
+            });
+
+        });
+
+
+        const checkLoading = (child) => {
+            const aContent = getChilds(child);
+            const lastTop = aContent[aContent.length-1].offsetTop;
+            const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+            const  pageHeight = document.documentElement.clientHeight || document.body.clientHeight;
+            if (scrollTop + pageHeight > lastTop) {
+                return true;
+            }
+        };
+
+        const imgLocation = (child) => {
+            //将父级下所有符合条件的子元素全部取出
+            const aContent = getChilds(child);
+            const imgWidth = aContent[0].offsetWidth;
+//            const num = Math.floor(document.documentElement.clientWidth / imgWidth);            //Math向下取整
+            const num = ~~(document.documentElement.clientWidth / imgWidth);
+            oPatent.style.cssText = 'width:'+ imgWidth*num+'px;margin:0 auto';
+            //计算图片高度
+            const heightArr = [];
+            [].map.call(aContent,(current,index) =>{
+                if (index < num) {
+                    heightArr.push(current.offsetHeight);
+                }else {
+                    //得到图片的最小高度
+//                    const minHeight = getMin(heightArr);
+                    const minHeight = Math.min(...heightArr);
+                    //得到最小高度序列号
+                    const  minIndex = getMinIndex(heightArr).index;
+                    current.style.position = 'absolute';
+                    current.style.top = minHeight + 'px';
+                    current.style.left = aContent[minIndex].offsetLeft + 'px';
+                    //更新最小高度
+                    heightArr[minIndex] = heightArr[minIndex] + current.offsetHeight;
+                }
+            });
+
+
+        };
+
+//        function getMin(arr) {
+//            var arrLength = arr.length;
+//            for (var i=0,ret=arr[0];i<arrLength;i++){
+//                ret = Math.min(ret,arr[i]);
+//            }
+//            return ret;
+//        }
+        
+        const getMinIndex = (arr) => {
+//        function getMinIndex(minHeight,heightArr) {
+//            for (var i in heightArr) {
+//                if (heightArr[i] == minHeight){
+//                    return i;
+//                }
+//            }
+            return arr.reduce((a,b,index,arr)=>{
+                if(b<a.val){
+                    a.val = b;
+                    a.index = index;
+                }
+                return a;
+            },{val:arr[0],index:0});
+        };
+
+        //将父级下所有符合条件的子元素全部取出
+        const getChilds = (child) => {
+            const childArr = [];
+            const tagsAll = oPatent.getElementsByTagName('*');
+            [].map.call(tagsAll, (cuurent) => {                     //tagAll不是真正的数组
+                if(cuurent.className == child) {
+                    childArr.push(cuurent);
+                }
+            });
+            return childArr;
+        };
+
+
+    </script>
+
+</body>
+</html>
